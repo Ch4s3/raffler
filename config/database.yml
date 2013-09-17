@@ -1,0 +1,17 @@
+development:
+  adapter: postgresql
+  database: raf_development
+
+
+test: &test
+  adapter: postgresql
+  database: raf_test
+
+
+production:
+  adapter: postgresql
+  database: raf_production
+
+
+cucumber:
+  <<: *test
