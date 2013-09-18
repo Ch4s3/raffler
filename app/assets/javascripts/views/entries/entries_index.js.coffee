@@ -5,20 +5,33 @@ class Raffler.Views.EntriesIndex extends Backbone.View
     'submit #new_entry': 'createEntry'
     'click #draw': 'drawWinner'
 
-  initialize: ->
-    @collection.on('sync', this.render, this)
-    @collection.on('add', @appendEntry, this)
+  initialize: =>
+    @collection.on('reset', @render)
+    @collection.on('add', @appendEntry)
 
   render: ->
     $(@el).html(@template())
     @collection.each(@appendEntry)
     this
 
-  appendEntry: (entry) =>
+  appendEntry: (entry) => #fat arrow in coffeescript maintains this view context
     view = new Raffler.Views.Entry(model: entry)
     @$('#entries').append(view.render().el)
 
+  drawWinner: (event) ->
+    event.preventDefault()
+    @collection.drawWinner()
+
   createEntry: (event) ->
     event.preventDefault()
-    @collection.create name: $('#new_entry_name').val()
-    $('#new_entry')[0].reset
+    attributes = name: $('#new_entry_name').val()
+    @collection.create attributes,
+      wait: true
+      success: -> $('#new_entry')[0].reset()
+      error: @handleError
+
+  handleError: (entry, response) ->
+    if response.status == 422
+      errors = $.parseJSON(response.responseText).errors
+      for attribute, messages of errors
+        alert "#{attribute} #{message}" for message in messages
